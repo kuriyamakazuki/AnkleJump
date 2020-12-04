@@ -1,5 +1,5 @@
-lb = [-10; -10; -10; -10; 0];
-ub = [10; 10; 10; 10; 10];
+lb = zeros(11,1);
+ub = 10*ones(11,1);
 %opt = optimoptions('ga', 'display', 'iter');
 
 Ksec = zeros(31,1);
