@@ -1,6 +1,6 @@
 %y = (v, x)
 
-function dydt = dynamics2(t, y, p, Ksec)
+function dydt = dynamics_Fmax(t, y, p, Ksec)
     Lslack = 0.42;
     width = 0.888;
     mass = 70.0;
@@ -8,7 +8,7 @@ function dydt = dynamics2(t, y, p, Ksec)
     F0 = 2*mass*g;
     Mass = 4*mass;
     
-    Lsec = Lslack+F0/Ksec-0.055*width*ppval(p,t)/10-y(2);
+    Lsec = Lslack+F0/Ksec-ppval(p,t)-y(2);
     
     dy1dt = (Fsec(Lsec)-F0)/Mass;
     dy2dt = y(1);

@@ -10,7 +10,8 @@ function Vjump = evalfunc(ACTgene, Ksec)
     c = -1/width^2;
     Fiso0 = c*(Lcc0/Lopt)^2 - 2*c*Lcc0/Lopt + c + 1;
     
-    opts = odeset('RelTol', 1e-7, 'AbsTol', 1e-10, 'Event', 'dynEventFcn');
+    opts = odeset('RelTol', 1e-5, 'AbsTol', 1e-8, 'Event', 'dynEventFcn');
+        %最大ステップを1e-3sに抑える
         %x=0(離地)になった瞬間に計算終了
         
     [t,y] = ode45(@(t,y) dynamics(t,y,ACTgene,Fmax,Lopt,Lslack,Ksec,mass),...
@@ -27,6 +28,6 @@ function Vjump = evalfunc(ACTgene, Ksec)
     if zurui || y(end,1) < 0 || y(end,2) < 0
         Vjump = 10^10;
     else
-        Vjump = 1/y(end, 1);
+        Vjump = 1/y(end, 1)+1000*(t(end)-0.23)*heaviside(t(end)-0.23);
     end
 end

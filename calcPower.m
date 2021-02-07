@@ -1,28 +1,38 @@
-Arel = 0.3;
-Brel = 3.6;
+Fmax = 5500; %最大筋力
+Lopt = 0.055; %収縮要素の至適長
+Lslack = 0.42; %弾性要素の自然長
+mass = 70.0; %体重
+Lcc0 = Lopt*0.7;
 
-Lcc = y(:,4);
-F = Ksec*(y(:,5)-Lslack);
-q = y(:,3);
-Vcc = zeros(length(F),1);
-for k = 1:length(F)
-    c = -1/width^2;
-    Fiso = c*(Lcc(k)/Lopt)^2 - 2*c*Lcc(k)/Lopt + c + 1;
-    Fcc = Fmax*Fiso*q(k);
-    fac = min(1, 3.33*q(k));
-    c2 = -1.5*Fiso;
-    c1 = fac*Brel*(Fiso+c2)^2 / (2.0*(Fiso+Arel));
-    c3 = c1 / (Fiso+c2);
-    c4 = -sqrt(c1/(fac*200.0)) - c2;
-    if F(k) < Fcc %concentric
-        Vcc(k) = fac*Lopt*Brel*(1-Fmax*q(k)*(Fiso+Arel)/(F(k)+Arel*Fmax*q(k)));
-    elseif F(k) < Fmax*q(k)*c4 %eccentric(low speed)
-        Vcc(k) = -Lopt * (c1/(F(k)/(Fmax*q(k))+c2)-c3);
-    else %eccentric(high speed)
-        Vcc(k) = Lopt * (fac*200.0*(F(k)/(Fmax*q(k))+c2) + c3 + 2*sqrt(c1*fac*200.0));
-    end
+width = 0.888;
+c = -1/width^2;
+Fiso0 = c*(Lcc0/Lopt)^2 - 2*c*Lcc0/Lopt + c + 1;
+q0 = 2*mass*98/(Fmax*Fiso0);
+
+opts = odeset('RelTol', 1e-5, 'AbsTol', 1e-8, 'Event', 'dynEventFcn');
+
+Ksec = zeros(31,1);
+motiontime = zeros(31,1);
+avePower = zeros(31,1);
+deltaEsec = zeros(31,1);
+for k = 1:31
+    Ksec(k) = (0.9+0.1*k)*10^5;
+    ACTgene = ACT(k,:);
+    Lsec0 = Lslack + 2*mass*9.8 / Ksec(k);
+    [t,y] = ode45(@(t,y) dynamics(t,y,ACTgene,Fmax,Lopt,Lslack,Ksec(k),mass),...
+        [0,0.5], [0;-1e-10;2*mass*9.8/(Fmax*Fiso0);Lcc0; Lsec0], opts);
+    motiontime(k) = t(end);
+    deltaEsec(k) = Ksec(k)*(y(end,5)-Lslack)^2/2-Ksec(k)*(Lsec0-Lslack)^2/2;
+    avePower(k) = (2*mass*y(end,1)^2+deltaEsec(k))/motiontime(k);
 end
-plot(t, -Ksec*Vcc.*(y(:,5)-Lslack))
-ylim([-400,400])
-xlabel('t')
-ylabel('Power')
+
+
+figure;
+yyaxis left
+plot(Ksec,motiontime)
+ylabel('time of motion [s]')
+yyaxis right
+plot(Ksec, avePower)
+ylabel('average power [W]')
+xlabel('k_{SEC} [N/m]')
+grid on

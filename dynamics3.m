@@ -1,14 +1,22 @@
 %y = (v, x)
 
-function dydt = dynamics2(t, y, p, Ksec)
+function dydt = dynamics3(t, y, ts, Ksec)
     Lslack = 0.42;
+    Lopt = 0.055;
     width = 0.888;
     mass = 70.0;
     g = 9.8;
     F0 = 2*mass*g;
     Mass = 4*mass;
+    Lsec0 = Lslack + F0/Ksec;
     
-    Lsec = Lslack+F0/Ksec-0.055*width*ppval(p,t)/10-y(2);
+    if t == 0
+        Lsec = Lsec0;
+    elseif t < ts
+        Lsec = Lsec0-Lopt*width/2.0-y(2);
+    else
+        Lsec = Lsec0+Lopt*width/2.0-y(2);
+    end
     
     dy1dt = (Fsec(Lsec)-F0)/Mass;
     dy2dt = y(1);

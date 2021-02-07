@@ -1,7 +1,7 @@
 %系の時間発展を表す微分方程式群
 %y = (v, x, q, Lcc, Lsec)
 
-function dydt = dynamics(t, y, ACTgene, Fmax, Lopt, Lslack, Ksec, mass)
+function dydt = dynamics_FVcustom(t, y, ACTgene, Fmax, Lopt, Lslack, Ksec, mass)
     width = 0.888; %収縮要素の伸縮範囲
     Tact = 0.055;
     Tdeact = 0.065;
@@ -35,25 +35,16 @@ function dydt = dynamics(t, y, ACTgene, Fmax, Lopt, Lslack, Ksec, mass)
     
     function Vcc = F_V(Lcc, F, q) %力−速度関係
         Fiso = F_L(Lcc);
-        Fcc = Fmax*Fiso*q;
-        fac = max(0,min(1, 3.33*q));
-        c2 = -1.5*Fiso;
-        c1 = fac*Brel*(Fiso+c2)^2 / (2.0*(Fiso+Arel));
-        c3 = c1 / (Fiso+c2);
-        c4 = -sqrt(c1/(fac*200.0)) - c2;
-        if F < Fcc %concentric
-            Vcc = fac*Lopt*Brel*(1-Fmax*q*(Fiso+Arel)/(F+Arel*Fmax*q));
-        elseif F < Fmax*q*c4 %eccentric(low speed)
-            Vcc = -Lopt * (c1/(F/(Fmax*q)+c2)-c3);
-        else %eccentric(high speed)
-            Vcc = Lopt * (fac*200.0*(F/(Fmax*q)+c2) + c3 + 2*sqrt(c1*fac*200.0));
-        end
+        fac = min(1, 3.33*q);
+        Vcc_max = -fac*Lopt*Brel*Fiso/Arel;
+        Fp = [0, Fiso*q*Fmax*0.9, Fiso*q*Fmax, Fiso*q*Fmax*1.1];
+        Vccp = [Vcc_max, Vcc_max*0.9, 0, -Vcc_max*0.9];
+        p = pchip(Fp,Vccp);
+        Vcc = ppval(p,F);
     end
     
     function F = Fsec(Lsec) %弾性要素の力−長さ関係
-        if Lsec < 0
-            F = Inf;
-        elseif Lsec < Lslack
+        if Lsec < Lslack
             F = 0;
         else
             F = Ksec * (Lsec-Lslack);

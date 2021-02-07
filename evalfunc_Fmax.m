@@ -1,4 +1,4 @@
-function eval = evalfunc2(throughp, Ksec)
+function eval = evalfunc_Fmax(throughp, Ksec)
 
 Lopt = 0.055;
 width = 0.888;
@@ -15,9 +15,9 @@ p = pchip(tp,throughp);
 
 odeopts = odeset('RelTol', 1e-5, 'AbsTol', 1e-8, 'Event', 'dynEventFcn2');
     
-[t,y] = ode45(@(t,y) dynamics2(t,y,p,Ksec), [0,0.5], [0; -1e-10], odeopts);
+[t,y] = ode45(@(t,y) dynamics_Fmax(t,y,p,Ksec), [0,0.5], [0; -1e-10], odeopts);
 
-Fsec_max = max(Ksec*(Fsec0/Ksec-Lopt*width*ppval(p,t)/10-y(:,2)));
+Fsec_max = max(Ksec*(Fsec0/Ksec-ppval(p,t)-y(:,2)));
 
 if y(end, 1) < 0 || y(end, 2) < 0
     eval = 10^10;

@@ -1,7 +1,7 @@
 %系の時間発展を表す微分方程式群
 %y = (v, x, q, Lcc, Lsec)
 
-function dydt = dynamics(t, y, ACTgene, Fmax, Lopt, Lslack, Ksec, mass)
+function dydt = dynamics_Vconst(t, y, ACTgene, Fmax, Lopt, Lslack, Ksec, mass)
     width = 0.888; %収縮要素の伸縮範囲
     Tact = 0.055;
     Tdeact = 0.065;
@@ -27,33 +27,42 @@ function dydt = dynamics(t, y, ACTgene, Fmax, Lopt, Lslack, Ksec, mass)
     dy4dt = F_V(y(4), Fsec(y(5)), y(3));
     dy5dt = -y(1) - F_V(y(4), Fsec(y(5)), y(3));
     dydt = [dy1dt; dy2dt; dy3dt; dy4dt; dy5dt];
+    
+    %{
+    plot(t,y(2),'bo')
+    hold on
+    drawnow
+    %}
 
     function Fiso = F_L(Lcc) %力−長さ関係
         c = -1/width^2;
         Fiso = c*(Lcc/Lopt)^2 - 2*c*Lcc/Lopt + c + 1;
+        if Fiso < 0
+            Fiso = eps;
+        end
     end
     
     function Vcc = F_V(Lcc, F, q) %力−速度関係
         Fiso = F_L(Lcc);
-        Fcc = Fmax*Fiso*q;
-        fac = max(0,min(1, 3.33*q));
+        fac = min(1, 3.33*q);
+        aveP = fac*Lopt*Brel*q*Fmax*Fiso*(1/2+Arel/Fiso-Arel*(Fiso+Arel)*reallog(1+Fiso/Arel)/Fiso^2);
         c2 = -1.5*Fiso;
         c1 = fac*Brel*(Fiso+c2)^2 / (2.0*(Fiso+Arel));
         c3 = c1 / (Fiso+c2);
         c4 = -sqrt(c1/(fac*200.0)) - c2;
-        if F < Fcc %concentric
-            Vcc = fac*Lopt*Brel*(1-Fmax*q*(Fiso+Arel)/(F+Arel*Fmax*q));
-        elseif F < Fmax*q*c4 %eccentric(low speed)
+        if F < Fmax*q*Fiso*0.9
+            Vcc = -aveP*20/(9*Fmax*q*Fiso);
+        elseif F < Fmax*q*Fiso
+            Vcc = -interp1([Fmax*q*Fiso*0.9,Fmax*q*Fiso],[aveP*20/(9*Fmax*q*Fiso),0],F);
+        elseif F < Fmax*q*c4
             Vcc = -Lopt * (c1/(F/(Fmax*q)+c2)-c3);
-        else %eccentric(high speed)
+        else
             Vcc = Lopt * (fac*200.0*(F/(Fmax*q)+c2) + c3 + 2*sqrt(c1*fac*200.0));
         end
     end
     
     function F = Fsec(Lsec) %弾性要素の力−長さ関係
-        if Lsec < 0
-            F = Inf;
-        elseif Lsec < Lslack
+        if Lsec < Lslack
             F = 0;
         else
             F = Ksec * (Lsec-Lslack);

@@ -1,4 +1,4 @@
-function eval = evalfunc2(throughp, Ksec)
+function eval = evalfunc2d(throughp, Ksec)
 
 Lopt = 0.055;
 width = 0.888;
@@ -9,8 +9,8 @@ Lcc0 = Lopt*0.7;
 Lsec0 = Lslack + Fsec0 / Ksec;
 Fmax = 5500;
 
-tp = 0:0.05:0.5;
-throughp = [0,throughp,-5*ones(1,5)];
+tp = 0:0.01:0.5;
+throughp = [0,throughp,-5*ones(1,20)];
 p = pchip(tp,throughp);
 
 odeopts = odeset('RelTol', 1e-5, 'AbsTol', 1e-8, 'Event', 'dynEventFcn2');

@@ -3,7 +3,9 @@
 
 function [value, isterminal, direction] = dynEventFcn(t,y)
     value(1) = real(y(2));
-    value(2) = t-0.99;
-    isterminal = 1;
-    direction = 1;
+    value(2) = t-0.49;
+    value(3) = real(y(4)-0.055*1.444);
+    value(4) = real(0.055*0.556-y(4));
+    isterminal = ones(1,4);
+    direction = [];
 end

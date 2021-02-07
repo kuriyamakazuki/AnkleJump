@@ -1,5 +1,4 @@
-function Vjump = evalfunc(ACTgene, Ksec)
-    Fmax = 5500; %最大筋力
+function Vjump = evalfunc_Fchange(ACTgene, Ksec, Fmax)
     Lopt = 0.055; %収縮要素の至適長
     Lslack = 0.42; %弾性要素の自然長
     mass = 70.0; %体重
